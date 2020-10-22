@@ -89,13 +89,18 @@
 
             for (let question in questions) {
                 let questionChoices = document.querySelector(`[name='question_${question}']`),
-                    hasSelected = questionChoices.checked,
+                    hasSelected = document.querySelector(`[name='question_${question}']:checked`) === null ? false : true,
                     questionChoiceValue = null,
                     isCorrect = false;
                 
+                if (document.querySelector(`[name='question_${question}']:checked`)) {
+                    document.querySelector(`[name='question_${question}']:checked`).setAttribute("checked", true);
+                }
+
                 if (!hasSelected && !confirmedContinue) {
                     if (confirm("Are you sure you want to submit?")) {
                         questionChoices.closest(".card").querySelector(".card-header").classList.add("bg-danger");
+                        questionChoiceValue = "no answer";
                         confirmedContinue = true;
                     } else {
                         break;
@@ -107,11 +112,7 @@
                         questionChoiceValue = document.querySelector(`[name='question_${question}']:checked`).value;
                     }
 
-                    if (typeof questions[question]["answer"] === "number") {
-                        isCorrect = questions[question]["answer"] === parseInt(questionChoiceValue);
-                    } else if (typeof questions[question]["answer"] === "string") {
-                        isCorrect = questions[question]["answer"] === questionChoiceValue
-                    }
+                    isCorrect = questions[question]["answer"] === questionChoiceValue
 
                     if (isCorrect) {
                         questionChoices.closest(".card").querySelector(".card-header").classList.add("bg-success");

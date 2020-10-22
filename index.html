@@ -83,10 +83,66 @@
             return temporaryStorage;
         }
 
+        function checkQuiz(questions) {
+            let score = 0,
+                confirmedContinue = false;
+
+            for (let question in questions) {
+                let questionChoices = document.querySelector(`[name='question_${question}']`),
+                    hasSelected = questionChoices.checked,
+                    questionChoiceValue = null,
+                    isCorrect = false;
+                
+                if (!hasSelected && !confirmedContinue) {
+                    if (confirm("Are you sure you want to submit?")) {
+                        questionChoices.closest(".card").querySelector(".card-header").classList.add("bg-danger");
+                        confirmedContinue = true;
+                    } else {
+                        break;
+                    }
+                } else {
+                    if (!hasSelected) {
+                        questionChoiceValue = "no answer";
+                    } else {
+                        questionChoiceValue = document.querySelector(`[name='question_${question}']:checked`).value;
+                    }
+
+                    if (typeof questions[question]["answer"] === "number") {
+                        isCorrect = questions[question]["answer"] === parseInt(questionChoiceValue);
+                    } else if (typeof questions[question]["answer"] === "string") {
+                        isCorrect = questions[question]["answer"] === questionChoiceValue
+                    }
+
+                    if (isCorrect) {
+                        questionChoices.closest(".card").querySelector(".card-header").classList.add("bg-success");
+                        score++;
+                    } else {
+                        questionChoices.closest(".card").querySelector(".card-header").classList.add("bg-danger");
+                    }
+                }
+
+                if (isCorrect) {
+                    questionChoices.closest(".card").innerHTML += `<div class="card-footer bg-success">
+                        Your answer is correct.
+                    </div>`;
+                } else {
+                    let ans = typeof questions[question]["answer"] === "number" ?
+                        questionChoices[questions[question]["answer"]] : 
+                        questions[question]["answer"];
+
+                    questionChoices.closest(".card").innerHTML += `<div class="card-footer bg-danger">
+                        Your answer is incorrect (${questionChoiceValue}). The correct answer was: ${ans}
+                    </div>`;
+                }
+            }
+
+            console.log(`${score} / ${questions.length} | ${Math.floor((score / questions.length) * 100)}%`);
+        }
+
         function generateQuiz() {
             let data = {
                 name: document.querySelector("#quiz-name").value,
-                questions: document.querySelector("#question-data").value
+                questions: document.querySelector("#question-data").value.trim()
             }
 
             // TODO: Validation of Data
@@ -111,7 +167,8 @@
                         1) === ")")) {
                     question["choices"].push(lines[i].slice(3))
                 } else {
-                    question["answer"] = getRandomInt(0, question["choices"].length - 1);
+                    // Dummy data normal input => String VALUE
+                    question["answer"] = question["choices"][getRandomInt(0, question["choices"].length - 1)];
 
                     questions.push(question);
 
@@ -162,7 +219,15 @@
                 questionHTML += questionTemplate
             }
 
+            questionHTML += `<div class="col-sm-12">
+                <button class="btn btn-success" id="submitQuizBtn">Submit Quiz</button>
+            </div>`;
+
             document.querySelector("#question-container").innerHTML = questionHTML;
+
+            document.querySelector("#submitQuizBtn").addEventListener("click", function() {
+                checkQuiz(questions);
+            });
         }
     </script>
 </body>
